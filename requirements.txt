@@ -1,0 +1,4 @@
+keyring
+pyotp
+pyautogui
+python-dotenv
