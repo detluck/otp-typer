@@ -14,7 +14,7 @@ A secure, cross-platform CLI tool to manage your 2FA (TOTP) secrets using the sy
  
 ### 1. Clone the repository
 ```bash
-git clone [https://github.com/detluck/otp-typer.git](https://github.com/detluck/otp-typer.git)
+git clone https://github.com/detluck/otp-typer.git
 cd otp-typer
 ```
 
