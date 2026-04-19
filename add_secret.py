@@ -2,52 +2,165 @@ import keyring
 import getpass
 import sys
 import os
+import subprocess
+import platform
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ENV_PATH = os.path.join(BASE_DIR, ".env")
+OTP_SCRIPT = os.path.join(BASE_DIR, "otp.py")
+PYTHON_EXE = sys.executable
 
 try:
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(ENV_PATH)
 except ImportError:
-    pass
+    print("Failed to load dotenv")
 
 
-def update_env(account_name):
-    env_file = ".env"
-    new_line = f"OTP_ACCOUNT={account_name}\n"
+def update_env(account_name, service_name):
+    new_entry = f"{service_name}:{account_name}"
     lines = []
-    found = False
+    new_content = []
+    current_entries = []
+    account_found = False
 
-    if os.path.exists(env_file):
-        with open(env_file, "r") as f:
+    if os.path.exists(ENV_PATH):
+        with open(ENV_PATH, "r") as f:
             lines = f.readlines()
 
-    new_content = []
     for line in lines:
         if line.startswith("OTP_ACCOUNT="):
-            new_content.append(new_line)
-            found = True
+            new_content.append(f"OTP_ACCOUNT={account_name}\n")
+            account_found = True
+
+        elif line.startswith("OTP_SERVICES="):
+            raw_services = line.split("=")[1].strip()
+            current_entries = [s for s in raw_services.split(",") if s]
         else:
             new_content.append(line)
 
-    if not found:
-        new_content.append(new_line)
+    if not account_found:
+        new_content.insert(0, f"OTP_ACCOUNT={account_name}\n")
+    if new_entry not in current_entries:
+        current_entries.append(new_entry)
 
-    with open(env_file, "w") as f:
+    new_content = [line for line in new_content if not line.startswith("OTP_SERVICES=")]
+    new_content.append(f"OTP_SERVICES={','.join(current_entries)}\n")
+
+    with open(ENV_PATH, "w") as f:
         f.writelines(new_content)
 
 
-def add_secret():
+def update_env_after_edit(old_entry, new_entry):
+    if not os.path.exists(ENV_PATH):
+        return
+
+    with open(ENV_PATH, "r") as f:
+        lines = f.readlines()
+
+    new_content = []
+    for line in lines:
+        if line.startswith("OTP_SERVICES="):
+            raw_services = line.split("=")[1].strip()
+            entries = [s for s in raw_services.split(",") if s]
+
+            if old_entry in entries:
+                entries.remove(old_entry)
+            if new_entry and new_entry not in entries:
+                entries.append(new_entry)
+
+            new_content.append(f"OTP_SERVICES={','.join(entries)}\n")
+        else:
+            new_content.append(line)
+
+        with open(ENV_PATH, "w") as f:
+            f.writelines(new_content)
+
+
+def edit_manager():
+    print("Hier will be manager to edit or deleate otps")
+
+
+def create_shortcut(service_name, account_name):
+    current_os = platform.system()
+
+    print("Creating a shortcut")
+
+    if current_os == "Windows":
+        try:
+            desktop = os.path.join(os.environ["USERPROFILE"], "Desktop")
+            shortcut_path = os.path.join(desktop, f"OTP-{service_name}.lnk")
+
+            powershell_cmd = (
+                f"$WshShell = New-Object-ComObject WScript.Shell; "
+                f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
+                f"$Shortcut.TargetPath = '{PYTHON_EXE}'; "
+                f"$Shortcut.Arguments = '\"{OTP_SCRIPT}\" {service_name} {account_name}'; "
+                f"$Shortcut.WorkingDirectory = '{BASE_DIR}'; "
+                f"$Shortcut.WindowStyle = 7; "
+                f"$Shortcut.Save()"
+            )
+            subprocess.run(["powershell", "-Command", powershell_cmd], check=True)
+            print(f"Windows shortcut created: Desktop/OTP-{service_name}.lnk")
+
+        except Exception as e:
+            print(f"Failed to create shortcut: {e}")
+
+    elif current_os == "Darwin":
+        try:
+            desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+            shortcut_path = os.path.join(desktop, f"OTP-{service_name}.command")
+
+            with open(shortcut_path, "w") as f:
+                f.write("#!/bin/zsh\n")
+                f.write(
+                    f"'{PYTHON_EXE}' '{OTP_SCRIPT}' {service_name} {account_name}\n"
+                )
+
+            os.chmod(shortcut_path, 0o755)
+            print(f"MacOS-Shortcut created: Desktop/OTP-{service_name}.command")
+        except Exception as e:
+            print(f"Failed to create shortcut: {e}")
+
+    elif current_os == "Linux":
+        print("Cant create a shortcut on linux due to number of DEs")
+        print(
+            f"Paste this command to your .conf or .desktop file: '{PYTHON_EXE}' '{OTP_SCRIPT}' {service_name} {account_name}"
+        )
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "edit":
+        edit_manager()
+        return
+
     service = sys.argv[1] if len(sys.argv) > 1 else input("Service name: ").strip()
     default_name = os.getenv("OTP_ACCOUNT", getpass.getuser())
     user_input = input(f"Username [Standard: {default_name}]: ").strip()
     user = user_input if user_input else default_name
+
+    existing_secret = keyring.get_password(service, user)
+
+    if existing_secret:
+        print(f"Warning! You already have a secret for {service} {user}")
+        overwrite = input("Do you want to overwrite your secret? (y/n)").strip().lower()
+
+        if overwrite not in ["y", "yes"]:
+            print("Canceled")
+            return
+        print("Overwrite confirmed...")
+
     secret = getpass.getpass("Secret (hidden): ").replace(" ", "")
 
     if secret:
         keyring.set_password(service, user, secret)
-        update_env(user)
+        update_env(user, service)
         print(f"Saved for {user}")
+        create_shortcut(service, user)
+    else:
+        print("No secret was inserted")
 
 
 if __name__ == "__main__":
-    add_secret()
+    main()
