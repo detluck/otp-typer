@@ -10,7 +10,7 @@ A secure, cross-platform CLI tool to manage your 2FA (TOTP) secrets using the sy
 
 ---
 
-## 🚀 Installation
+## Installation
  
 ### 1. Clone the repository
 ```bash
