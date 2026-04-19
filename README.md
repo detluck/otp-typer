@@ -38,14 +38,13 @@ or manually:
 Register a new 2FA secret and automatically create a desktop shortcut (Windows/macOS):
 
 ```bash
-python add_secret.py [service_name]
-# Example: python add_secret.py github
+python add_secret.py
 ```
  
-### List registered services
+### Edit and remove registered services
 
 ```bash
-python add_secret.py list
+python add_secret.py edit
 ```
 
 ### Type a code
@@ -53,7 +52,7 @@ python add_secret.py list
 over terminal:
 
 ```bash
-python otp.py [service_name]
+python otp.py [service_name] [user_name]
 ```
 or just create a keyboard shortcuts for each service, see description below
 
