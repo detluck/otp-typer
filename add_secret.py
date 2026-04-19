@@ -52,7 +52,7 @@ def update_env(account_name, service_name):
         f.writelines(new_content)
 
 
-def update_env_after_edit(old_entry, new_entry):
+def update_env_after_edit(old_entry, new_entry=None):
     if not os.path.exists(ENV_PATH):
         return
 
