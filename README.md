@@ -84,6 +84,7 @@ This way will create a windows shortcut on your desktop
 5. **Test**: Click into a text input field and press your key combination.
 
 ---
+#### 2. Using AutoHotkey
 
 For the most reliable and fastest execution of your OTP script (without any delays or input focus issues), i highly recommend using [AutoHotkey](https://www.autohotkey.com/).
 AutoHotkey is a free, highly popular, open-source tool for Windows that allows you to create powerful custom keyboard shortcuts.
