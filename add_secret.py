@@ -108,20 +108,7 @@ def create_shortcut(service_name, account_name):
             print(f"Failed to create shortcut: {e}")
 
     elif current_os == "Darwin":
-        try:
-            desktop = os.path.join(os.path.expanduser("~"), "Desktop")
-            shortcut_path = os.path.join(desktop, f"OTP-{service_name}.command")
-
-            with open(shortcut_path, "w") as f:
-                f.write("#!/bin/zsh\n")
-                f.write(
-                    f"'{PYTHON_EXE}' '{OTP_SCRIPT}' {service_name} {account_name}\n"
-                )
-
-            os.chmod(shortcut_path, 0o755)
-            print(f"MacOS-Shortcut created: Desktop/OTP-{service_name}.command")
-        except Exception as e:
-            print(f"Failed to create shortcut: {e}")
+        print("You dont need a shorcut, see Readme")
 
     elif current_os == "Linux":
         print("Cant create a shortcut on linux due to number of DEs")
@@ -157,7 +144,18 @@ def main():
         keyring.set_password(service, user, secret)
         update_env(user, service)
         print(f"Saved for {user}")
-        create_shortcut(service, user)
+        if platform.system() == "Windows":
+
+            print("\nHow do you want to execute the script?")
+            print("[1] Windows-Shortcut on Desktop")
+            print("[2] AutoHotkey-Code (.ahk)")
+            choice = input("(1/2): ").strip()
+        
+            if choice == "1":
+                create_shortcut(service, user)
+            elif choice == "2":
+                print(f"<Your keys>::Run('\"{PYTHON_EXE}\" \"{OTP_SCRIPT}\" {service} {user}', , \"Hide\")")
+                print("Copy this code to your .ahk file and enter the keybinding for it")
     else:
         print("No secret was inserted")
 
