@@ -93,7 +93,7 @@ def create_shortcut(service_name, account_name):
             shortcut_path = os.path.join(desktop, f"OTP-{service_name}.lnk")
 
             powershell_cmd = (
-                f"$WshShell = New-Object-ComObject WScript.Shell; "
+                f"$WshShell = New-Object -ComObject WScript.Shell; "
                 f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
                 f"$Shortcut.TargetPath = '{PYTHON_EXE}'; "
                 f"$Shortcut.Arguments = '\"{OTP_SCRIPT}\" {service_name} {account_name}'; "
