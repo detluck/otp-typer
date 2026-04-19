@@ -79,7 +79,80 @@ def update_env_after_edit(old_entry, new_entry):
 
 
 def edit_manager():
-    print("Hier will be manager to edit or deleate otps")
+    #Load .env again if there were changes
+    load_dotenv(ENV_PATH, override=True) 
+    
+    services_raw = os.getenv("OTP_SERVICES", "")
+    entries = [s.strip() for s in services_raw.split(",") if s.strip()]
+    
+    if not entries:
+        print("No secrets found")
+        return
+
+    print("\nSaved secrets:")
+    print("-" * 40)
+    for index, entry in enumerate(entries, start=1):
+        if ":" in entry:
+            service, user = entry.split(":", 1)
+            print(f"[{index}] {service} (User: {user})")
+    print("-" * 40)
+    
+    choice = input("\nGive a number to edit a secret(or press enter to cancel): ").strip()
+    
+    if not choice.isdigit() or int(choice) < 1 or int(choice) > len(entries):
+        print("Canceled")
+        return
+        
+    selected_entry = entries[int(choice) - 1]
+    old_service, old_user = selected_entry.split(":", 1)
+    
+    print(f"\nSelected: {old_service} (User: {old_user})")
+    print("[1] Delete")
+    print("[2] Rename (service or user)")
+    print("[3] Set new secret key")
+    
+    action = input("Select an action? (1/2/3): ").strip()
+    
+    if action == "1":
+        confirm = input(f"Delete '{old_service}'? (y/n): ").strip().lower()
+        if confirm in ['y', 'yes']:
+            try:
+                keyring.delete_password(old_service, old_user)
+            except Exception:
+                pass 
+            update_env_after_edit(selected_entry)
+            print(f"Deleted: {selected_entry}")
+            
+    elif action == "2":
+        new_service = input(f"New service name [{old_service}]: ").strip() or old_service
+        new_user = input(f"New user name [{old_user}]: ").strip() or old_user
+        
+        if new_service == old_service and new_user == old_user:
+            print("Nothing was changed")
+            return
+            
+        secret = keyring.get_password(old_service, old_user)
+        if not secret:
+            print("Couldnt reed the secret")
+            return
+            
+        keyring.set_password(new_service, new_user, secret)
+        keyring.delete_password(old_service, old_user)
+        
+        new_entry = f"{new_service}:{new_user}"
+        update_env_after_edit(selected_entry, new_entry)
+        print(f"Renamed to: {new_service} (User: {new_user})")
+        print(f"Create the new shortcut to use it: python add_secret.py")
+
+    elif action == "3":
+        new_secret = getpass.getpass("Insert new secret (hidden): ").replace(" ", "")
+        if new_secret:
+            keyring.set_password(old_service, old_user, new_secret)
+            print("The secret was updated.")
+        else:
+            print("Canceled")
+    else:
+        print("Wrong selection")
 
 
 def create_shortcut(service_name, account_name):
