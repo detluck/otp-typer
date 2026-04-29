@@ -157,22 +157,26 @@ Paste the copied code into your `.ahk` file.
 ---
 
 ### macOS
-On macOS, the best method is using the built-in **Shortcuts** app.
+On macOS, the best method is using the built-in **Automator** app.
 
-1. **Open Shortcuts**: Press `Cmd` + `Space`, type "Shortcuts", and open the app.
-2. **New Shortcut**: Click the **+** symbol at the top.
-3. **Add Action**:
-   - Search for **"Run Shell Script"** on the right sidebar and drag it into the main window.
+1. **Open Automator**: Press `Cmd` + `Space`, type "Automator", and open the app.
+2. Select **Quick Action**.
+3. **Configure at the top**:
+   - **Workflow receives current**: `no input`
+   - **in**: `any application`
+4. **Add a Shell Script Action**:
+   - Search for **"Run Shell Script"** on the left sidebar and drag it into the main window.
    - Replace the default text in the box with the absolute path to your Python interpreter and the script:
      ```bash
-     /usr/bin/python3 /path/to/your/repo/otp.py [service]
+     /usr/bin/python3 /path/to/your/repo/otp.py [service] [username]
      ```
      *(Tip: Type `which python3` in your terminal to find the correct path).*
-4. **Assign Hotkey**:
-   - Click the **Info symbol** (small "i") on the right sidebar.
-   - Click on **"Add Keyboard Shortcut"**.
-   - Press your desired key combination (e.g., `Cmd` + `Option` + `G`).
-5. **Test**: Close the app and press the combination while focused on a login field.
+5. Name and save the Action.
+6. **Assign Hotkey**:
+   - Go to Settings -> Keyboard -> Keyboard Shortcuts -> Services -> General.
+   - Find the name of your Quick Action.
+   - Assign your desired key combination (e.g., `Cmd` + `Option` + `G`).
+7. **Test**: Close the app and press the combination while focused on a login field.
 
 ---
 
@@ -184,7 +188,7 @@ Linux desktop environments have excellent built-in menus for custom shortcuts.
 2. **Custom Shortcuts**: Scroll all the way down to **Custom Shortcuts**.
 3. **Add**:
    - **Name**: `OTP [Service]`
-   - **Command**: `python /path/to/your/repo/otp.py [service]`
+   - **Command**: `python /path/to/your/repo/otp.py [service] [username]`
    - **Shortcut**: Press your desired keys (e.g., `Super` + `U`).
 
 ### For KDE Plasma
@@ -192,12 +196,12 @@ Linux desktop environments have excellent built-in menus for custom shortcuts.
 2. **New**: Edit -> New -> Global Shortcut -> Command/URL.
 3. **Setup**:
    - **Trigger**: Select your key combination.
-   - **Action**: Enter the script path: `python /path/to/your/repo/otp.py [service]`.
+   - **Action**: Enter the script path: `python /path/to/your/repo/otp.py [service] [username]`.
 
 ### For Window Managers (i3 / Sway / Hyprland)
 Simply add a line to your configuration file:
-- **i3/Sway**: `bindsym $mod+Shift+g exec python /path/to/otp.py [service]`
-- **Hyprland**: `bind = $mainMod SHIFT, G, exec, python /path/to/otp.py [service]`
+- **i3/Sway**: `bindsym $mod+Shift+g exec python /path/to/otp.py [service] [username]`
+- **Hyprland**: `bind = $mainMod SHIFT, G, exec, python /path/to/otp.py [service] [username]`
 
 ---
 
